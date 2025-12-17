@@ -12,25 +12,10 @@ margin: 0;
 padding: 15px;
 background: #f7f7f7;
 }
-h2 {
-margin-top: 0;
-}
-input {
-width: 100%;
-font-size: 20px;
-padding: 10px;
-box-sizing: border-box;
-}
-.card {
-background: white;
-margin-top: 12px;
-padding: 12px;
-border-radius: 6px;
-box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-}
-.label {
-font-weight: bold;
-}
+h2 { margin-top: 0; }
+input { width: 100%; font-size: 20px; padding: 10px; box-sizing: border-box; }
+.card { background: white; margin-top: 12px; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+.label { font-weight: bold; }
 
 /* --- Címek kiemelése --- */
 .bank-title strong {
@@ -106,9 +91,7 @@ document.getElementById('eredmeny').innerHTML = '';
 return;
 }
 
-/* ===== BANK =====
-cikkszám: r[2]
-*/
+/* ===== BANK ===== cikkszám: r[2] */
 const bankTalalat = bank.filter(r =>
 r[2] && r[2].toLowerCase().includes(keresett)
 );
@@ -127,12 +110,13 @@ html += `
 });
 }
 
-/* ===== ÜLTETÉS =====
-cikkszám: r[0]
-*/
+/* ===== ÜLTETÉS ===== cikkszám: r[0] */
 const ultetesTalalat = ultetes.filter(r =>
 r[0] && r[0].toLowerCase().includes(keresett)
 );
+
+// 🟢 Rendezés csökkenő sorrendbe a beültetés db szerint (r[5])
+ultetesTalalat.sort((a, b) => parseInt(b[5]) - parseInt(a[5]));
 
 if (ultetesTalalat.length > 0) {
 html += `<div class="card ultetes-title"><strong>Beültetés és alkatrész adatok</strong></div>`;
