@@ -57,14 +57,22 @@ let ultetes = [];
 fetch('bank.csv')
 .then(r => r.text())
 .then(t => {
-bank = t.split('\n').slice(1).map(s => s.trim().split(';'));
+bank = t.split('\n')
+.map(s => s.trim())
+.filter(s => s)
+.slice(1)
+.map(s => s.split(';').map(e => e.trim()));
 });
 
 /* ULTETES CSV betöltése */
 fetch('ultetes.csv')
 .then(r => r.text())
 .then(t => {
-ultetes = t.split('\n').slice(1).map(s => s.trim().split(';'));
+ultetes = t.split('\n')
+.map(s => s.trim())
+.filter(s => s)
+.slice(1)
+.map(s => s.split(';').map(e => e.trim()));
 });
 
 document.getElementById('keres').addEventListener('input', function () {
@@ -81,6 +89,7 @@ let b = bank.find(r => r[0] && r[0].includes(keresett));
 if (b) {
 html += `
 <div class="card">
+<div><span class="label">Cikkszám:</span> ${b[0]}</div>
 <div><span class="label">Feeder bank:</span> ${b[1]}</div>
 <div><span class="label">Pozíció:</span> ${b[2]}</div>
 </div>
