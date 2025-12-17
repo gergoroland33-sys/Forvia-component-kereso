@@ -53,22 +53,22 @@ placeholder="Írd be a cikkszámot"
 let bank = [];
 let ultetes = [];
 
-/* CSV-k betöltése és kereső engedélyezése csak a betöltés után */
+/* CSV-k betöltése */
 Promise.all([
 fetch('bank.csv').then(r => r.text()),
 fetch('ultetes.csv').then(r => r.text())
 ]).then(([bankText, ultetesText]) => {
 
-// BANK CSV feldolgozása
+// Bank CSV feldolgozása
 bank = bankText.split('\n')
-.map(s => s.trim())
+.map(s => s.trim().replace(/"/g,''))
 .filter(s => s)
 .slice(1)
 .map(s => s.split(';').map(e => e.trim()));
 
-// ULTETES CSV feldolgozása
+// Ultetés CSV feldolgozása
 ultetes = ultetesText.split('\n')
-.map(s => s.trim())
+.map(s => s.trim().replace(/"/g,''))
 .filter(s => s)
 .slice(1)
 .map(s => s.split(';').map(e => e.trim()));
@@ -86,19 +86,20 @@ document.getElementById('eredmeny').innerHTML = '';
 return;
 }
 
-// BANK ADATOK
-let b = bank.find(r => r[0] && r[0].includes(keresett));
+// BANK ADATOK (cikkszám a 3. oszlop = r[2])
+let b = bank.find(r => r[2] && r[2].includes(keresett));
 if (b) {
 html += `
 <div class="card">
-<div><span class="label">Cikkszám:</span> ${b[0]}</div>
-<div><span class="label">Feeder bank:</span> ${b[1]}</div>
-<div><span class="label">Pozíció:</span> ${b[2]}</div>
+<div><span class="label">Cikkszám:</span> ${b[2]}</div>
+<div><span class="label">Gép:</span> ${b[0]}</div>
+<div><span class="label">Pozíció:</span> ${b[1]}</div>
+<div><span class="label">Model:</span> ${b[3]}</div>
 </div>
 `;
 }
 
-// ÜLTETÉS ADATOK
+// ÜLTETÉS ADATOK (Cikkszám r[0], Alkatrész info r[1], Oldal r[3], Modell r[4], Beültetés db r[5])
 let u = ultetes.filter(r => r[0] && r[0].includes(keresett));
 if (u.length > 0) {
 html += `<div class="card"><strong>Ültetés adatok:</strong></div>`;
@@ -106,9 +107,9 @@ u.forEach(r => {
 html += `
 <div class="card">
 <div><span class="label">Alkatrész info:</span> ${r[1]}</div>
-<div><span class="label">Oldal:</span> ${r[2]}</div>
-<div><span class="label">Modell:</span> ${r[3]}</div>
-<div><span class="label">Beültetés db:</span> ${r[4]}</div>
+<div><span class="label">Oldal:</span> ${r[3]}</div>
+<div><span class="label">Modell:</span> ${r[4]}</div>
+<div><span class="label">Beültetés db:</span> ${r[5]}</div>
 </div>
 `;
 });
