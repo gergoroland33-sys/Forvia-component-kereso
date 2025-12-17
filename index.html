@@ -31,9 +31,6 @@ box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 .label {
 font-weight: bold;
 }
-.small {
-color: #555;
-}
 </style>
 </head>
 
@@ -59,38 +56,42 @@ fetch('bank.csv').then(r => r.text()),
 fetch('ultetes.csv').then(r => r.text())
 ]).then(([bankText, ultetesText]) => {
 
-// Bank CSV feldolgozása
-bank = bankText.split('\n')
-.map(s => s.trim().replace(/"/g,''))
+bank = bankText
+.split('\n')
+.map(s => s.trim().replace(/"/g, ''))
 .filter(s => s)
 .slice(1)
 .map(s => s.split(';').map(e => e.trim()));
 
-// Ultetés CSV feldolgozása
-ultetes = ultetesText.split('\n')
-.map(s => s.trim().replace(/"/g,''))
+ultetes = ultetesText
+.split('\n')
+.map(s => s.trim().replace(/"/g, ''))
 .filter(s => s)
 .slice(1)
 .map(s => s.split(';').map(e => e.trim()));
 
-// Kereső engedélyezése
 document.getElementById('keres').addEventListener('input', keres);
 });
 
 function keres() {
-let keresett = this.value.trim().toLowerCase(); // kisbetűsítve a kereséshez
+let keresett = this.value.trim().toLowerCase();
 let html = '';
 
-if (keresett.length === 0) {
+if (keresett === '') {
 document.getElementById('eredmeny').innerHTML = '';
 return;
 }
 
-// BANK ADATOK minden előfordulás (cikkszám a 3. oszlop = r[2])
-let b = bank.filter(r => r[2] && r[2].toLowerCase().includes(keresett));
-if (b.length > 0) {
+/* ===== BANK ADATOK =====
+cikkszám: r[2]
+*/
+let bankTalalat = bank.filter(r =>
+r[2] && r[2].toLowerCase().includes(keresett)
+);
+
+if (bankTalalat.length > 0) {
 html += `<div class="card"><strong>Bank adatok:</strong></div>`;
-b.forEach(r => {
+bankTalalat.forEach(r => {
 html += `
 <div class="card">
 <div><span class="label">Cikkszám:</span> ${r[2]}</div>
@@ -102,11 +103,16 @@ html += `
 });
 }
 
-// ÜLTETÉS ADATOK minden előfordulás
-let u = ultetes.filter(r => r[0] && r[0].toLowerCase().includes(keresett));
-if (u.length > 0) {
+/* ===== ÜLTETÉS ADATOK =====
+cikkszám: r[0]
+*/
+let ultetesTalalat = ultetes.filter(r =>
+r[0] && r[0].toLowerCase().includes(keresett)
+);
+
+if (ultetesTalalat.length > 0) {
 html += `<div class="card"><strong>Ültetés adatok:</strong></div>`;
-u.forEach(r => {
+ultetesTalalat.forEach(r => {
 html += `
 <div class="card">
 <div><span class="label">Alkatrész info:</span> ${r[1]}</div>
@@ -118,8 +124,7 @@ html += `
 });
 }
 
-// Nincs találat
-if (b.length === 0 && u.length === 0) {
+if (bankTalalat.length === 0 && ultetesTalalat.length === 0) {
 html += `<div class="card">Nincs találat</div>`;
 }
 
