@@ -84,7 +84,7 @@ document.getElementById('eredmeny').innerHTML = '';
 return;
 }
 
-/* Bank + pozíció */
+/* BANK ADATOK */
 let b = bank.find(r => r[0] && r[0].includes(keresett));
 if (b) {
 html += `
@@ -96,9 +96,10 @@ html += `
 `;
 }
 
-/* Ültetések */
+/* ÜLTETÉS ADATOK */
 let u = ultetes.filter(r => r[0] && r[0].includes(keresett));
 if (u.length > 0) {
+html += `<div class="card"><strong>Ültetés adatok:</strong></div>`;
 u.forEach(r => {
 html += `
 <div class="card">
@@ -111,6 +112,7 @@ html += `
 });
 }
 
+/* Nincs találat */
 if (!b && u.length === 0) {
 html += `<div class="card">Nincs találat</div>`;
 }
