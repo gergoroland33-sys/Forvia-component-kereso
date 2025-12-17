@@ -102,8 +102,10 @@ if (u.length > 0) {
 u.forEach(r => {
 html += `
 <div class="card">
-<div class="label">${r[1]}</div>
-<div class="small">Oldal: ${r[2]} | Darab: ${r[3]}</div>
+<div><span class="label">Alkatrész info:</span> ${r[1]}</div>
+<div><span class="label">Oldal:</span> ${r[2]}</div>
+<div><span class="label">Modell:</span> ${r[3]}</div>
+<div><span class="label">Beültetés db:</span> ${r[4]}</div>
 </div>
 `;
 });
