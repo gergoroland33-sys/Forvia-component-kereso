@@ -53,29 +53,31 @@ placeholder="Írd be a cikkszámot"
 let bank = [];
 let ultetes = [];
 
-/* BANK CSV betöltése */
-fetch('bank.csv')
-.then(r => r.text())
-.then(t => {
-bank = t.split('\n')
+/* CSV-k betöltése és kereső engedélyezése csak a betöltés után */
+Promise.all([
+fetch('bank.csv').then(r => r.text()),
+fetch('ultetes.csv').then(r => r.text())
+]).then(([bankText, ultetesText]) => {
+
+// BANK CSV feldolgozása
+bank = bankText.split('\n')
 .map(s => s.trim())
 .filter(s => s)
 .slice(1)
 .map(s => s.split(';').map(e => e.trim()));
-});
 
-/* ULTETES CSV betöltése */
-fetch('ultetes.csv')
-.then(r => r.text())
-.then(t => {
-ultetes = t.split('\n')
+// ULTETES CSV feldolgozása
+ultetes = ultetesText.split('\n')
 .map(s => s.trim())
 .filter(s => s)
 .slice(1)
 .map(s => s.split(';').map(e => e.trim()));
+
+// Kereső engedélyezése
+document.getElementById('keres').addEventListener('input', keres);
 });
 
-document.getElementById('keres').addEventListener('input', function () {
+function keres() {
 let keresett = this.value.trim();
 let html = '';
 
@@ -84,7 +86,7 @@ document.getElementById('eredmeny').innerHTML = '';
 return;
 }
 
-/* BANK ADATOK */
+// BANK ADATOK
 let b = bank.find(r => r[0] && r[0].includes(keresett));
 if (b) {
 html += `
@@ -96,7 +98,7 @@ html += `
 `;
 }
 
-/* ÜLTETÉS ADATOK */
+// ÜLTETÉS ADATOK
 let u = ultetes.filter(r => r[0] && r[0].includes(keresett));
 if (u.length > 0) {
 html += `<div class="card"><strong>Ültetés adatok:</strong></div>`;
@@ -112,13 +114,13 @@ html += `
 });
 }
 
-/* Nincs találat */
+// Nincs találat
 if (!b && u.length === 0) {
 html += `<div class="card">Nincs találat</div>`;
 }
 
 document.getElementById('eredmeny').innerHTML = html;
-});
+}
 </script>
 
 </body>
