@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forvia Cikkszám kereső G.R 2026</title>
 
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DN2T1CSGJ3"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-DN2T1CSGJ3');
+</script>
+
 <style>
 body {
 font-family: Arial, Helvetica, sans-serif;
@@ -12,30 +21,30 @@ margin: 0;
 padding: 15px;
 background: #f7f7f7;
 }
-h2 { margin-top: 0; }
-input { width: 100%; font-size: 20px; padding: 10px; box-sizing: border-box; }
-.card { background: white; margin-top: 12px; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-.label { font-weight: bold; }
-
-/* --- Címek kiemelése --- */
-.bank-title strong {
-color: #1565c0; /* kék szöveg */
-background: #e3f2fd; /* világoskék háttér */
-padding: 6px;
-border-left: 6px solid #1976d2;
-display: block;
-border-radius: 4px;
-margin-bottom: 6px;
+h2 {
+margin-top: 0;
 }
-
-.ultetes-title strong {
-color: #2e7d32; /* zöld szöveg */
-background: #e8f5e9; /* világoszöld háttér */
-padding: 6px;
-border-left: 6px solid #2e7d32;
-display: block;
-border-radius: 4px;
-margin-bottom: 6px;
+input {
+width: 100%;
+font-size: 20px;
+padding: 10px;
+box-sizing: border-box;
+}
+.card {
+background: white;
+margin-top: 12px;
+padding: 12px;
+border-radius: 6px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.label {
+font-weight: bold;
+}
+.bank-header {
+color: #1E90FF; /* kék szín a Bank adatokhoz */
+}
+.ultetes-header {
+color: #FF4500; /* narancs szín a Beültetés adatokhoz */
 }
 </style>
 </head>
@@ -91,13 +100,13 @@ document.getElementById('eredmeny').innerHTML = '';
 return;
 }
 
-/* ===== BANK ===== cikkszám: r[2] */
+/* ===== BANK ===== */
 const bankTalalat = bank.filter(r =>
 r[2] && r[2].toLowerCase().includes(keresett)
 );
 
 if (bankTalalat.length > 0) {
-html += `<div class="card bank-title"><strong>Feeder bank adatok</strong></div>`;
+html += `<div class="card bank-header"><strong>Feeder bank adatok</strong></div>`;
 bankTalalat.forEach(r => {
 html += `
 <div class="card">
@@ -110,16 +119,16 @@ html += `
 });
 }
 
-/* ===== ÜLTETÉS ===== cikkszám: r[0] */
+/* ===== ÜLTETÉS ===== */
 const ultetesTalalat = ultetes.filter(r =>
 r[0] && r[0].toLowerCase().includes(keresett)
 );
 
-// 🟢 Rendezés csökkenő sorrendbe a beültetés db szerint (r[5])
-ultetesTalalat.sort((a, b) => parseInt(b[5]) - parseInt(a[5]));
+// Rendezés beültetés db szerint csökkenő
+ultetesTalalat.sort((a,b) => Number(b[5]) - Number(a[5]));
 
 if (ultetesTalalat.length > 0) {
-html += `<div class="card ultetes-title"><strong>Beültetés és alkatrész adatok</strong></div>`;
+html += `<div class="card ultetes-header"><strong>Beültetés és alkatrész adatok</strong></div>`;
 ultetesTalalat.forEach(r => {
 html += `
 <div class="card">
