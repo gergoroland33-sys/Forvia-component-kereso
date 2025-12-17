@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cikkszám kereső</title>
+
+<style>
+body {
+font-family: Arial, Helvetica, sans-serif;
+margin: 0;
+padding: 15px;
+background: #f7f7f7;
+}
+h2 {
+margin-top: 0;
+}
+input {
+width: 100%;
+font-size: 20px;
+padding: 10px;
+box-sizing: border-box;
+}
+.card {
+background: white;
+margin-top: 12px;
+padding: 12px;
+border-radius: 6px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.label {
+font-weight: bold;
+}
+.small {
+color: #555;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Cikkszám kereső</h2>
+
+<input
+id="keres"
+type="text"
+placeholder="Írd be a cikkszámot"
+/>
+
+<div id="eredmeny"></div>
+
+<script>
+let bank = [];
+let ultetes = [];
+
+/* BANK CSV betöltése */
+fetch('bank.csv')
+.then(r => r.text())
+.then(t => {
+bank = t.split('\n').slice(1).map(s => s.trim().split(';'));
+});
+
+/* ULTETES CSV betöltése */
+fetch('ultetes.csv')
+.then(r => r.text())
+.then(t => {
+ultetes = t.split('\n').slice(1).map(s => s.trim().split(';'));
+});
+
+document.getElementById('keres').addEventListener('input', function () {
+let keresett = this.value.trim();
+let html = '';
+
+if (keresett.length === 0) {
+document.getElementById('eredmeny').innerHTML = '';
+return;
+}
+
+/* Bank + pozíció */
+let b = bank.find(r => r[0] && r[0].includes(keresett));
+if (b) {
+html += `
+<div class="card">
+<div><span class="label">Feeder bank:</span> ${b[1]}</div>
+<div><span class="label">Pozíció:</span> ${b[2]}</div>
+</div>
+`;
+}
+
+/* Ültetések */
+let u = ultetes.filter(r => r[0] && r[0].includes(keresett));
+if (u.length > 0) {
+u.forEach(r => {
+html += `
+<div class="card">
+<div class="label">${r[1]}</div>
+<div class="small">Oldal: ${r[2]} | Darab: ${r[3]}</div>
+</div>
+`;
+});
+}
+
+if (!b && u.length === 0) {
+html += `<div class="card">Nincs találat</div>`;
+}
+
+document.getElementById('eredmeny').innerHTML = html;
+});
+</script>
+
+</body>
+</html>
