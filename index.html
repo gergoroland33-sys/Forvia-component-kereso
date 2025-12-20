@@ -6,7 +6,6 @@
 <title>Forvia Cikkszám kereső G.R 2026</title>
 
 <style>
-/* MODERNEBB, IPARI STÍLUS */
 :root {
 --bg: #0f172a;
 --panel: #1e293b;
@@ -22,9 +21,9 @@ margin: 0;
 padding: 0;
 background: var(--bg);
 color: var(--text);
+-webkit-font-smoothing: antialiased;
 }
 
-/* SZOLID NÉVJEGY ÉS ÓRA */
 .brand-header {
 font-size: 0.65rem;
 color: #4a5568;
@@ -41,7 +40,6 @@ padding: 15px;
 position: sticky;
 top: 0;
 z-index: 1000;
-box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 display: flex;
 justify-content: space-between;
 align-items: center;
@@ -60,7 +58,6 @@ font-size: 0.9rem;
 color: #94a3b8;
 }
 
-/* KERESŐ MEZŐ */
 .search-container {
 padding: 20px 15px;
 max-width: 800px;
@@ -77,30 +74,28 @@ border: 2px solid #334155;
 border-radius: 15px;
 color: white;
 outline: none;
-transition: 0.3s;
+transition: border-color 0.2s;
 }
 
 input:focus {
 border-color: var(--accent);
-box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
 }
 
-/* JAVASLATOK ÉS ELŐZMÉNYEK */
 #suggest {
 background: var(--panel);
 border-radius: 12px;
 margin-top: 8px;
-overflow: hidden;
 border: 1px solid #334155;
+display: none;
 }
 
 .s-item {
 padding: 12px 20px;
 cursor: pointer;
 border-bottom: 1px solid #334155;
-font-weight: 500;
 }
 
+.s-item:last-child { border-bottom: none; }
 .s-item:hover { background: #2d3748; color: var(--accent); }
 
 .history-title {
@@ -108,14 +103,12 @@ font-size: 0.7rem;
 color: #64748b;
 text-transform: uppercase;
 margin: 20px 0 10px 5px;
-letter-spacing: 1px;
 }
 
 .history-chips {
 display: flex;
 flex-wrap: wrap;
 gap: 8px;
-margin-bottom: 20px;
 }
 
 .chip {
@@ -125,59 +118,36 @@ border-radius: 50px;
 font-size: 0.85rem;
 border: 1px solid #334155;
 cursor: pointer;
-transition: 0.2s;
 }
 
-.chip:hover { border-color: var(--accent); background: #2d3748; }
-
-/* EREDMÉNY KÁRTYÁK */
 .card {
 background: var(--panel);
 margin-top: 15px;
 padding: 15px;
 border-radius: 12px;
-box-shadow: 0 4px 6px rgba(0,0,0,0.2);
 border: 1px solid #334155;
-animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-from { opacity: 0; transform: translateY(10px); }
-to { opacity: 1; transform: translateY(0); }
-}
-
-.label { color: #94a3b8; font-size: 0.85rem; margin-right: 5px; }
-
-.bank-title strong {
+.bank-title strong, .ultetes-title strong {
 color: white;
-background: var(--bank-color);
 padding: 10px;
 display: block;
 border-radius: 8px;
 text-transform: uppercase;
 font-size: 0.9rem;
-letter-spacing: 1px;
 }
 
-.ultetes-title strong {
-color: white;
-background: var(--ultetes-color);
-padding: 10px;
-display: block;
-border-radius: 8px;
-text-transform: uppercase;
-font-size: 0.9rem;
-letter-spacing: 1px;
-}
+.bank-title strong { background: var(--bank-color); }
+.ultetes-title strong { background: var(--ultetes-color); }
 
+.label { color: #94a3b8; font-size: 0.85rem; }
 #eredmeny { max-width: 800px; margin: 0 auto 50px auto; padding: 0 15px; }
-
 </style>
 </head>
 
 <body>
 
-<div class="brand-header">Forvia Alkatrész kereső G.R 2026</div>
+<div class="brand-header">Forvia Cikkszám kereső 2026 G.R</div>
 
 <div class="top-bar">
 <h2>FORVIA TERMINAL</h2>
@@ -199,36 +169,43 @@ letter-spacing: 1px;
 <script>
 let bank = [];
 let ultetes = [];
+let uniqueIds = []; // Gyorsítótár a cikkszámoknak
 let keresIdozito = null;
 let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || "[]");
 
-/* ÓRA FRISSÍTÉSE */
 function updateClock() {
-const now = new Date();
-document.getElementById('clock').textContent = now.toLocaleTimeString('hu-HU');
+document.getElementById('clock').textContent = new Date().toLocaleTimeString('hu-HU');
 }
 setInterval(updateClock, 1000);
 updateClock();
 
-/* CSV BETÖLTÉSE - EREDETI */
+/* CSV BETÖLTÉS ÉS ELŐ-FELDOLGOZÁS */
 Promise.all([
-fetch('bank.csv?ver=FINAL1').then(r => r.text()),
-fetch('ultetes.csv?ver=FINAL1').then(r => r.text())
+fetch('bank.csv?ver=F2').then(r => r.text()),
+fetch('ultetes.csv?ver=F2').then(r => r.text())
 ]).then(([bankText, ultetesText]) => {
 bank = feldolgoz(bankText);
 ultetes = feldolgoz(ultetesText);
+
+// Cikkszám lista előkészítése a gyorsabb kereséshez
+const idSet = new Set();
+bank.forEach(r => r[2] && idSet.add(r[2].toUpperCase()));
+ultetes.forEach(r => r[0] && idSet.add(r[0].toUpperCase()));
+uniqueIds = Array.from(idSet);
+
 const input = document.getElementById('keres');
 input.disabled = false;
 document.getElementById('eredmeny').innerHTML = '';
 renderHistory();
+
 input.addEventListener('input', function () {
-updateSuggest(this.value.toLowerCase());
+const val = this.value.toUpperCase();
+updateSuggest(val);
 clearTimeout(keresIdozito);
-keresIdozito = setTimeout(keres.bind(this), 250);
+keresIdozito = setTimeout(() => keres(val), 150);
 });
 });
 
-/* CSV feldolgozás - EREDETI */
 function feldolgoz(text) {
 return text.split('\n')
 .map(s => s.replace(/"/g, '').trim())
@@ -237,74 +214,62 @@ return text.split('\n')
 .map(s => s.split(';').map(e => e.trim()));
 }
 
-/* Javaslat - EREDETI LOGIKA */
+/* GYORS JAVASLATOK */
 function updateSuggest(value) {
 const box = document.getElementById('suggest');
-box.innerHTML = '';
-if (value.length < 2) return;
-const set = new Set();
-bank.forEach(r => r[2] && set.add(r[2]));
-ultetes.forEach(r => r[0] && set.add(r[0]));
-[...set]
-.filter(c => c.toLowerCase().includes(value))
-.slice(0, 8)
-.forEach(c => {
-const d = document.createElement('div');
-d.className = 's-item';
-d.textContent = c;
-d.onclick = () => {
-const i = document.getElementById('keres');
-i.value = c;
-box.innerHTML = '';
-keres.call(i);
-};
-box.appendChild(d);
-});
+if (value.length < 2) {
+box.style.display = 'none';
+return;
 }
 
-/* ELŐZMÉNYEK KEZELÉSE */
-function addToHistory(code) {
-if (!code || code.length < 3) return;
-searchHistory = searchHistory.filter(item => item !== code);
-searchHistory.unshift(code);
-searchHistory = searchHistory.slice(0, 5);
+const matches = uniqueIds.filter(id => id.includes(value)).slice(0, 6);
+
+if (matches.length > 0) {
+box.innerHTML = matches.map(m => `<div class="s-item" onclick="selectSuggest('${m}')">${m}</div>`).join('');
+box.style.display = 'block';
+} else {
+box.style.display = 'none';
+}
+}
+
+function selectSuggest(code) {
+const i = document.getElementById('keres');
+i.value = code;
+document.getElementById('suggest').style.display = 'none';
+keres(code);
+}
+
+/* ELŐZMÉNYEK - CSAK HA VAN TALÁLAT */
+function tryAddToHistory(code) {
+// Csak ha létező cikkszám (pontos egyezés)
+if (uniqueIds.includes(code)) {
+if (searchHistory[0] === code) return; // Ne mentse duplán egymás után
+searchHistory = [code, ...searchHistory.filter(c => c !== code)].slice(0, 5);
 localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
 renderHistory();
+}
 }
 
 function renderHistory() {
 const container = document.getElementById('historyChips');
 const section = document.getElementById('historySection');
-if (searchHistory.length === 0) {
+if (!searchHistory.length) {
 section.style.display = 'none';
 return;
 }
 section.style.display = 'block';
-container.innerHTML = '';
-searchHistory.forEach(code => {
-const chip = document.createElement('div');
-chip.className = 'chip';
-chip.textContent = code;
-chip.onclick = () => {
-const i = document.getElementById('keres');
-i.value = code;
-keres.call(i);
-};
-container.appendChild(chip);
-});
+container.innerHTML = searchHistory.map(code => `<div class="chip" onclick="selectSuggest('${code}')">${code}</div>`).join('');
 }
 
-/* KERESÉS - EREDETI LOGIKA (Csak az előzmény mentés lett hozzáadva) */
-function keres() {
-const keresett = this.value.trim().toUpperCase(); // Vizualitás miatt nagybetű
-let html = '';
+/* KERESÉS OPTIMALIZÁLVA */
+function keres(keresett) {
+const eredmenyBox = document.getElementById('eredmeny');
 if (keresett.length < 2) {
-document.getElementById('eredmeny').innerHTML = '';
+eredmenyBox.innerHTML = '';
 return;
 }
 
-addToHistory(keresett);
-
+let html = '';
 const bankTalalat = bank.filter(r => r[2] && r[2].toUpperCase().includes(keresett));
 if (bankTalalat.length) {
 html += `<div class="card bank-title"><strong>Feeder bank adatok</strong></div>`;
@@ -333,8 +298,12 @@ html += `<div class="card">
 });
 }
 
-if (!html) html = `<div class="card">Nincs találat erre a cikkszámra</div>`;
-document.getElementById('eredmeny').innerHTML = html;
+if (html) {
+tryAddToHistory(keresett); // Csak akkor próbáljuk menteni, ha van értelmes eredmény
+} else {
+html = `<div class="card">Nincs találat erre a cikkszámra</div>`;
+}
+eredmenyBox.innerHTML = html;
 }
 </script>
 
