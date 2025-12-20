@@ -17,7 +17,6 @@ input { width: 100%; font-size: 20px; padding: 10px; box-sizing: border-box; }
 .card { background: white; margin-top: 12px; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
 .label { font-weight: bold; }
 
-/* --- Címek kiemelése --- */
 .bank-title strong {
 color: #1565c0;
 background: #e3f2fd;
@@ -38,7 +37,7 @@ border-radius: 4px;
 margin-bottom: 6px;
 }
 
-/* --- Autocomplete (javaslatok) --- */
+/* javaslat */
 #suggest {
 background: #fff;
 border-radius: 6px;
@@ -61,13 +60,7 @@ border-bottom: 1px solid #eee;
 
 <h2>Forvia Cikkszám kereső G.R 2026</h2>
 
-<input
-id="keres"
-type="text"
-placeholder="Keress rá egy cikkszámra!"
-disabled
-/>
-
+<input id="keres" type="text" placeholder="Keress rá egy cikkszámra!" disabled />
 <div id="suggest"></div>
 <div id="eredmeny">Adatok betöltése…</div>
 
@@ -76,7 +69,7 @@ let bank = [];
 let ultetes = [];
 let keresIdozito = null;
 
-/* ===== CSV-k betöltése ===== */
+/* CSV */
 Promise.all([
 fetch('bank.csv?ver=FINAL1').then(r => r.text()),
 fetch('ultetes.csv?ver=FINAL1').then(r => r.text())
@@ -85,28 +78,27 @@ fetch('ultetes.csv?ver=FINAL1').then(r => r.text())
 bank = feldolgoz(bankText);
 ultetes = feldolgoz(ultetesText);
 
-const keresInput = document.getElementById('keres');
-keresInput.disabled = false;
+const input = document.getElementById('keres');
+input.disabled = false;
 document.getElementById('eredmeny').innerHTML = '';
 
-keresInput.addEventListener('input', function () {
+input.addEventListener('input', function () {
 updateSuggest(this.value.toLowerCase());
 clearTimeout(keresIdozito);
 keresIdozito = setTimeout(keres.bind(this), 250);
 });
 });
 
-/* ===== CSV feldolgozás ===== */
+/* CSV feldolgozás */
 function feldolgoz(text) {
-return text
-.split('\n')
+return text.split('\n')
 .map(s => s.replace(/"/g, '').trim())
-.filter(s => s.length > 0)
+.filter(s => s)
 .slice(1)
 .map(s => s.split(';').map(e => e.trim()));
 }
 
-/* ===== Javaslatok frissítése ===== */
+/* Javaslat – KÖZÉPRŐL IS */
 function updateSuggest(value) {
 const box = document.getElementById('suggest');
 box.innerHTML = '';
@@ -118,23 +110,23 @@ bank.forEach(r => r[2] && set.add(r[2]));
 ultetes.forEach(r => r[0] && set.add(r[0]));
 
 [...set]
-.filter(c => c.includes().startsWith(value))
+.filter(c => c.toLowerCase().includes(value))
 .slice(0, 8)
 .forEach(c => {
 const d = document.createElement('div');
 d.className = 's-item';
 d.textContent = c;
 d.onclick = () => {
-const input = document.getElementById('keres');
-input.value = c;
+const i = document.getElementById('keres');
+i.value = c;
 box.innerHTML = '';
-keres.call(input);
+keres.call(i);
 };
 box.appendChild(d);
 });
 }
 
-/* ===== KERESÉS – CSAK CIKKSZÁM ===== */
+/* KERESÉS – EREDETI LOGIKA */
 function keres() {
 const keresett = this.value.trim().toLowerCase();
 let html = '';
@@ -144,52 +136,40 @@ document.getElementById('eredmeny').innerHTML = '';
 return;
 }
 
-/* ===== BANK ===== */
 const bankTalalat = bank.filter(r =>
 r[2] && r[2].toLowerCase().includes(keresett)
 );
 
-if (bankTalalat.length > 0) {
+if (bankTalalat.length) {
 html += `<div class="card bank-title"><strong>Feeder bank adatok</strong></div>`;
 bankTalalat.forEach(r => {
-html += `
-<div class="card">
+html += `<div class="card">
 <div><span class="label">Cikkszám:</span> ${r[2]}</div>
 <div><span class="label">Gép:</span> ${r[0]}</div>
 <div><span class="label">Pozíció:</span> ${r[1]}</div>
 <div><span class="label">Model:</span> ${r[3]}</div>
-</div>
-`;
+</div>`;
 });
 }
 
-/* ===== ÜLTETÉS ===== */
 const ultetesTalalat = ultetes.filter(r =>
 r[0] && r[0].toLowerCase().includes(keresett)
-);
+).sort((a,b)=>parseInt(b[5])-parseInt(a[5]));
 
-ultetesTalalat.sort((a, b) => parseInt(b[5]) - parseInt(a[5]));
-
-if (ultetesTalalat.length > 0) {
+if (ultetesTalalat.length) {
 html += `<div class="card ultetes-title"><strong>Beültetés és alkatrész adatok</strong></div>`;
 ultetesTalalat.forEach(r => {
-html += `
-<div class="card">
+html += `<div class="card">
 <div><span class="label">Cikkszám:</span> ${r[0]}</div>
 <div><span class="label">Alkatrész info:</span> ${r[1]}</div>
 <div><span class="label">Oldal:</span> ${r[3]}</div>
 <div><span class="label">Modell:</span> ${r[4]}</div>
 <div><span class="label">Beültetés db:</span> ${r[5]}</div>
-</div>
-`;
+</div>`;
 });
 }
 
-if (bankTalalat.length === 0 && ultetesTalalat.length === 0) {
-html = `<div class="card">Nincs találat erre a cikkszámra</div>`;
-}
-
-document.getElementById('suggest').innerHTML = '';
+if (!html) html = `<div class="card">Nincs találat erre a cikkszámra</div>`;
 document.getElementById('eredmeny').innerHTML = html;
 }
 </script>
