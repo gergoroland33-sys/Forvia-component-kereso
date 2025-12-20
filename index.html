@@ -74,11 +74,6 @@ border: 2px solid #334155;
 border-radius: 15px;
 color: white;
 outline: none;
-transition: border-color 0.2s;
-}
-
-input:focus {
-border-color: var(--accent);
 }
 
 #suggest {
@@ -87,6 +82,7 @@ border-radius: 12px;
 margin-top: 8px;
 border: 1px solid #334155;
 display: none;
+z-index: 100;
 }
 
 .s-item {
@@ -169,7 +165,8 @@ font-size: 0.9rem;
 <script>
 let bank = [];
 let ultetes = [];
-let uniqueIds = []; // Gyorsítótár a cikkszámoknak
+let idSet = new Set(); // Szupergyors ellenőrzéshez
+let uniqueIdsArr = []; // Javaslatokhoz
 let keresIdozito = null;
 let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || "[]");
 
@@ -179,19 +176,16 @@ document.getElementById('clock').textContent = new Date().toLocaleTimeString('hu
 setInterval(updateClock, 1000);
 updateClock();
 
-/* CSV BETÖLTÉS ÉS ELŐ-FELDOLGOZÁS */
 Promise.all([
-fetch('bank.csv?ver=F2').then(r => r.text()),
-fetch('ultetes.csv?ver=F2').then(r => r.text())
+fetch('bank.csv?ver=F3').then(r => r.text()),
+fetch('ultetes.csv?ver=F3').then(r => r.text())
 ]).then(([bankText, ultetesText]) => {
 bank = feldolgoz(bankText);
 ultetes = feldolgoz(ultetesText);
 
-// Cikkszám lista előkészítése a gyorsabb kereséshez
-const idSet = new Set();
 bank.forEach(r => r[2] && idSet.add(r[2].toUpperCase()));
 ultetes.forEach(r => r[0] && idSet.add(r[0].toUpperCase()));
-uniqueIds = Array.from(idSet);
+uniqueIdsArr = Array.from(idSet);
 
 const input = document.getElementById('keres');
 input.disabled = false;
@@ -200,9 +194,17 @@ renderHistory();
 
 input.addEventListener('input', function () {
 const val = this.value.toUpperCase();
+
+if (val.length < 2) {
+document.getElementById('suggest').style.display = 'none';
+document.getElementById('eredmeny').innerHTML = '';
+clearTimeout(keresIdozito);
+return;
+}
+
 updateSuggest(val);
 clearTimeout(keresIdozito);
-keresIdozito = setTimeout(() => keres(val), 150);
+keresIdozito = setTimeout(() => keres(val), 100);
 });
 });
 
@@ -214,15 +216,15 @@ return text.split('\n')
 .map(s => s.split(';').map(e => e.trim()));
 }
 
-/* GYORS JAVASLATOK */
 function updateSuggest(value) {
 const box = document.getElementById('suggest');
-if (value.length < 2) {
-box.style.display = 'none';
-return;
+const matches = [];
+for (let i = 0; i < uniqueIdsArr.length; i++) {
+if (uniqueIdsArr[i].includes(value)) {
+matches.push(uniqueIdsArr[i]);
+if (matches.length >= 6) break;
 }
-
-const matches = uniqueIds.filter(id => id.includes(value)).slice(0, 6);
+}
 
 if (matches.length > 0) {
 box.innerHTML = matches.map(m => `<div class="s-item" onclick="selectSuggest('${m}')">${m}</div>`).join('');
@@ -239,17 +241,6 @@ document.getElementById('suggest').style.display = 'none';
 keres(code);
 }
 
-/* ELŐZMÉNYEK - CSAK HA VAN TALÁLAT */
-function tryAddToHistory(code) {
-// Csak ha létező cikkszám (pontos egyezés)
-if (uniqueIds.includes(code)) {
-if (searchHistory[0] === code) return; // Ne mentse duplán egymás után
-searchHistory = [code, ...searchHistory.filter(c => c !== code)].slice(0, 5);
-localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
-renderHistory();
-}
-}
-
 function renderHistory() {
 const container = document.getElementById('historyChips');
 const section = document.getElementById('historySection');
@@ -261,16 +252,14 @@ section.style.display = 'block';
 container.innerHTML = searchHistory.map(code => `<div class="chip" onclick="selectSuggest('${code}')">${code}</div>`).join('');
 }
 
-/* KERESÉS OPTIMALIZÁLVA */
 function keres(keresett) {
 const eredmenyBox = document.getElementById('eredmeny');
-if (keresett.length < 2) {
-eredmenyBox.innerHTML = '';
-return;
-}
+if (keresett.length < 2) return;
 
 let html = '';
-const bankTalalat = bank.filter(r => r[2] && r[2].toUpperCase().includes(keresett));
+
+// Bank találatok - LIMITÁLVA 30-ra
+const bankTalalat = bank.filter(r => r[2] && r[2].toUpperCase().includes(keresett)).slice(0, 30);
 if (bankTalalat.length) {
 html += `<div class="card bank-title"><strong>Feeder bank adatok</strong></div>`;
 bankTalalat.forEach(r => {
@@ -283,8 +272,10 @@ html += `<div class="card">
 });
 }
 
+// Ültetés találatok - LIMITÁLVA 30-ra
 const ultetesTalalat = ultetes.filter(r => r[0] && r[0].toUpperCase().includes(keresett))
-.sort((a,b)=>parseInt(b[5])-parseInt(a[5]));
+.sort((a,b)=>parseInt(b[5])-parseInt(a[5]))
+.slice(0, 30);
 if (ultetesTalalat.length) {
 html += `<div class="card ultetes-title"><strong>Beültetés adatok</strong></div>`;
 ultetesTalalat.forEach(r => {
@@ -298,12 +289,14 @@ html += `<div class="card">
 });
 }
 
-if (html) {
-tryAddToHistory(keresett); // Csak akkor próbáljuk menteni, ha van értelmes eredmény
-} else {
-html = `<div class="card">Nincs találat erre a cikkszámra</div>`;
+// ELŐZMÉNY MENTÉSE - Csak ha pontos és létező a cikkszám
+if (idSet.has(keresett)) {
+searchHistory = [keresett, ...searchHistory.filter(c => c !== keresett)].slice(0, 5);
+localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+renderHistory();
 }
-eredmenyBox.innerHTML = html;
+
+eredmenyBox.innerHTML = html || `<div class="card">Nincs találat</div>`;
 }
 </script>
 
