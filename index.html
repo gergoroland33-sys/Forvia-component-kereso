@@ -2,86 +2,225 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Forvia Cikkszám kereső G.R 2026</title>
 
 <style>
+/* MODERNEBB, IPARI STÍLUS */
+:root {
+--bg: #0f172a;
+--panel: #1e293b;
+--accent: #3b82f6;
+--bank-color: #1976d2;
+--ultetes-color: #2e7d32;
+--text: #f8fafc;
+}
+
 body {
-font-family: Arial, Helvetica, sans-serif;
+font-family: 'Inter', -apple-system, sans-serif;
 margin: 0;
+padding: 0;
+background: var(--bg);
+color: var(--text);
+}
+
+/* SZOLID NÉVJEGY ÉS ÓRA */
+.brand-header {
+font-size: 0.65rem;
+color: #4a5568;
+text-align: center;
+padding: 10px 0 5px 0;
+letter-spacing: 1px;
+font-weight: 300;
+}
+
+.top-bar {
+background: var(--panel);
+border-bottom: 2px solid var(--accent);
 padding: 15px;
-background: #f7f7f7;
-}
-h2 { margin-top: 0; }
-input { width: 100%; font-size: 20px; padding: 10px; box-sizing: border-box; }
-.card { background: white; margin-top: 12px; padding: 12px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-.label { font-weight: bold; }
-
-.bank-title strong {
-color: #1565c0;
-background: #e3f2fd;
-padding: 6px;
-border-left: 6px solid #1976d2;
-display: block;
-border-radius: 4px;
-margin-bottom: 6px;
+position: sticky;
+top: 0;
+z-index: 1000;
+box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+display: flex;
+justify-content: space-between;
+align-items: center;
 }
 
-.ultetes-title strong {
-color: #2e7d32;
-background: #e8f5e9;
-padding: 6px;
-border-left: 6px solid #2e7d32;
-display: block;
-border-radius: 4px;
-margin-bottom: 6px;
+.top-bar h2 {
+margin: 0;
+font-size: 1.1rem;
+font-weight: 800;
+color: var(--accent);
 }
 
-/* javaslat */
+.live-clock {
+font-family: monospace;
+font-size: 0.9rem;
+color: #94a3b8;
+}
+
+/* KERESŐ MEZŐ */
+.search-container {
+padding: 20px 15px;
+max-width: 800px;
+margin: 0 auto;
+}
+
+input {
+width: 100%;
+font-size: 1.2rem;
+padding: 15px 20px;
+box-sizing: border-box;
+background: #0f172a;
+border: 2px solid #334155;
+border-radius: 15px;
+color: white;
+outline: none;
+transition: 0.3s;
+}
+
+input:focus {
+border-color: var(--accent);
+box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+/* JAVASLATOK ÉS ELŐZMÉNYEK */
 #suggest {
-background: #fff;
-border-radius: 6px;
-box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-margin-top: 5px;
+background: var(--panel);
+border-radius: 12px;
+margin-top: 8px;
+overflow: hidden;
+border: 1px solid #334155;
 }
 
 .s-item {
-padding: 10px;
+padding: 12px 20px;
 cursor: pointer;
-border-bottom: 1px solid #eee;
+border-bottom: 1px solid #334155;
+font-weight: 500;
 }
 
-.s-item:last-child { border-bottom: none; }
-.s-item:hover { background: #f0f0f0; }
+.s-item:hover { background: #2d3748; color: var(--accent); }
+
+.history-title {
+font-size: 0.7rem;
+color: #64748b;
+text-transform: uppercase;
+margin: 20px 0 10px 5px;
+letter-spacing: 1px;
+}
+
+.history-chips {
+display: flex;
+flex-wrap: wrap;
+gap: 8px;
+margin-bottom: 20px;
+}
+
+.chip {
+background: var(--panel);
+padding: 8px 15px;
+border-radius: 50px;
+font-size: 0.85rem;
+border: 1px solid #334155;
+cursor: pointer;
+transition: 0.2s;
+}
+
+.chip:hover { border-color: var(--accent); background: #2d3748; }
+
+/* EREDMÉNY KÁRTYÁK */
+.card {
+background: var(--panel);
+margin-top: 15px;
+padding: 15px;
+border-radius: 12px;
+box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+border: 1px solid #334155;
+animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+from { opacity: 0; transform: translateY(10px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.label { color: #94a3b8; font-size: 0.85rem; margin-right: 5px; }
+
+.bank-title strong {
+color: white;
+background: var(--bank-color);
+padding: 10px;
+display: block;
+border-radius: 8px;
+text-transform: uppercase;
+font-size: 0.9rem;
+letter-spacing: 1px;
+}
+
+.ultetes-title strong {
+color: white;
+background: var(--ultetes-color);
+padding: 10px;
+display: block;
+border-radius: 8px;
+text-transform: uppercase;
+font-size: 0.9rem;
+letter-spacing: 1px;
+}
+
+#eredmeny { max-width: 800px; margin: 0 auto 50px auto; padding: 0 15px; }
+
 </style>
 </head>
 
 <body>
 
-<h2>Forvia Cikkszám kereső G.R 2026</h2>
+<div class="brand-header">Napi jelentés segédlet G.R 2026</div>
 
-<input id="keres" type="text" placeholder="Keress rá egy cikkszámra!" disabled />
+<div class="top-bar">
+<h2>FORVIA TERMINAL</h2>
+<div class="live-clock" id="clock">00:00:00</div>
+</div>
+
+<div class="search-container">
+<input id="keres" type="text" placeholder="Beolvasás vagy gépelés..." disabled />
 <div id="suggest"></div>
+
+<div id="historySection" style="display:none;">
+<div class="history-title">Utoljára keresve</div>
+<div class="history-chips" id="historyChips"></div>
+</div>
+</div>
+
 <div id="eredmeny">Adatok betöltése…</div>
 
 <script>
 let bank = [];
 let ultetes = [];
 let keresIdozito = null;
+let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || "[]");
 
-/* CSV */
+/* ÓRA FRISSÍTÉSE */
+function updateClock() {
+const now = new Date();
+document.getElementById('clock').textContent = now.toLocaleTimeString('hu-HU');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* CSV BETÖLTÉSE - EREDETI */
 Promise.all([
 fetch('bank.csv?ver=FINAL1').then(r => r.text()),
 fetch('ultetes.csv?ver=FINAL1').then(r => r.text())
 ]).then(([bankText, ultetesText]) => {
-
 bank = feldolgoz(bankText);
 ultetes = feldolgoz(ultetesText);
-
 const input = document.getElementById('keres');
 input.disabled = false;
 document.getElementById('eredmeny').innerHTML = '';
-
+renderHistory();
 input.addEventListener('input', function () {
 updateSuggest(this.value.toLowerCase());
 clearTimeout(keresIdozito);
@@ -89,7 +228,7 @@ keresIdozito = setTimeout(keres.bind(this), 250);
 });
 });
 
-/* CSV feldolgozás */
+/* CSV feldolgozás - EREDETI */
 function feldolgoz(text) {
 return text.split('\n')
 .map(s => s.replace(/"/g, '').trim())
@@ -98,17 +237,14 @@ return text.split('\n')
 .map(s => s.split(';').map(e => e.trim()));
 }
 
-/* Javaslat – KÖZÉPRŐL IS */
+/* Javaslat - EREDETI LOGIKA */
 function updateSuggest(value) {
 const box = document.getElementById('suggest');
 box.innerHTML = '';
-
 if (value.length < 2) return;
-
 const set = new Set();
 bank.forEach(r => r[2] && set.add(r[2]));
 ultetes.forEach(r => r[0] && set.add(r[0]));
-
 [...set]
 .filter(c => c.toLowerCase().includes(value))
 .slice(0, 8)
@@ -126,25 +262,55 @@ box.appendChild(d);
 });
 }
 
-/* KERESÉS – EREDETI LOGIKA */
-function keres() {
-const keresett = this.value.trim().toLowerCase();
-let html = '';
+/* ELŐZMÉNYEK KEZELÉSE */
+function addToHistory(code) {
+if (!code || code.length < 3) return;
+searchHistory = searchHistory.filter(item => item !== code);
+searchHistory.unshift(code);
+searchHistory = searchHistory.slice(0, 5);
+localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+renderHistory();
+}
 
+function renderHistory() {
+const container = document.getElementById('historyChips');
+const section = document.getElementById('historySection');
+if (searchHistory.length === 0) {
+section.style.display = 'none';
+return;
+}
+section.style.display = 'block';
+container.innerHTML = '';
+searchHistory.forEach(code => {
+const chip = document.createElement('div');
+chip.className = 'chip';
+chip.textContent = code;
+chip.onclick = () => {
+const i = document.getElementById('keres');
+i.value = code;
+keres.call(i);
+};
+container.appendChild(chip);
+});
+}
+
+/* KERESÉS - EREDETI LOGIKA (Csak az előzmény mentés lett hozzáadva) */
+function keres() {
+const keresett = this.value.trim().toUpperCase(); // Vizualitás miatt nagybetű
+let html = '';
 if (keresett.length < 2) {
 document.getElementById('eredmeny').innerHTML = '';
 return;
 }
 
-const bankTalalat = bank.filter(r =>
-r[2] && r[2].toLowerCase().includes(keresett)
-);
+addToHistory(keresett);
 
+const bankTalalat = bank.filter(r => r[2] && r[2].toUpperCase().includes(keresett));
 if (bankTalalat.length) {
 html += `<div class="card bank-title"><strong>Feeder bank adatok</strong></div>`;
 bankTalalat.forEach(r => {
 html += `<div class="card">
-<div><span class="label">Cikkszám:</span> ${r[2]}</div>
+<div><span class="label">Cikkszám:</span> <strong>${r[2]}</strong></div>
 <div><span class="label">Gép:</span> ${r[0]}</div>
 <div><span class="label">Pozíció:</span> ${r[1]}</div>
 <div><span class="label">Model:</span> ${r[3]}</div>
@@ -152,15 +318,13 @@ html += `<div class="card">
 });
 }
 
-const ultetesTalalat = ultetes.filter(r =>
-r[0] && r[0].toLowerCase().includes(keresett)
-).sort((a,b)=>parseInt(b[5])-parseInt(a[5]));
-
+const ultetesTalalat = ultetes.filter(r => r[0] && r[0].toUpperCase().includes(keresett))
+.sort((a,b)=>parseInt(b[5])-parseInt(a[5]));
 if (ultetesTalalat.length) {
-html += `<div class="card ultetes-title"><strong>Beültetés és alkatrész adatok</strong></div>`;
+html += `<div class="card ultetes-title"><strong>Beültetés adatok</strong></div>`;
 ultetesTalalat.forEach(r => {
 html += `<div class="card">
-<div><span class="label">Cikkszám:</span> ${r[0]}</div>
+<div><span class="label">Cikkszám:</span> <strong>${r[0]}</strong></div>
 <div><span class="label">Alkatrész info:</span> ${r[1]}</div>
 <div><span class="label">Oldal:</span> ${r[3]}</div>
 <div><span class="label">Modell:</span> ${r[4]}</div>
