@@ -37,6 +37,28 @@ display: block;
 border-radius: 4px;
 margin-bottom: 6px;
 }
+
+/* --- Autocomplete --- */
+#javaslatok {
+background: white;
+border-radius: 6px;
+box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+margin-top: 5px;
+}
+
+.javaslat {
+padding: 10px;
+cursor: pointer;
+border-bottom: 1px solid #eee;
+}
+
+.javaslat:last-child {
+border-bottom: none;
+}
+
+.javaslat:hover {
+background: #f0f0f0;
+}
 </style>
 </head>
 
@@ -51,12 +73,13 @@ placeholder="Keress rá egy cikkszámra!"
 disabled
 />
 
+<div id="javaslatok"></div>
 <div id="eredmeny">Adatok betöltése…</div>
 
 <script>
 let bank = [];
 let ultetes = [];
-let keresIdozito = null; // ⏱ debounce időzítő
+let keresIdozito = null;
 
 /* ===== CSV-k betöltése ===== */
 Promise.all([
@@ -86,12 +109,40 @@ return text
 .map(s => s.split(';').map(e => e.trim()));
 }
 
-/* ===== KERESÉS – CSAK CIKKSZÁM ===== */
+/* ===== AUTOCOMPLETE ===== */
+function frissitJavaslatok(keresett) {
+const javaslatDiv = document.getElementById('javaslatok');
+javaslatDiv.innerHTML = '';
+
+if (keresett.length < 2) return;
+
+const cikkszamok = new Set();
+bank.forEach(r => r[2] && cikkszamok.add(r[2]));
+ultetes.forEach(r => r[0] && cikkszamok.add(r[0]));
+
+[...cikkszamok]
+.filter(c => c.toLowerCase().startsWith(keresett))
+.slice(0, 8)
+.forEach(c => {
+const div = document.createElement('div');
+div.className = 'javaslat';
+div.textContent = c;
+div.onclick = () => {
+document.getElementById('keres').value = c;
+javaslatDiv.innerHTML = '';
+keres.call(document.getElementById('keres'));
+};
+javaslatDiv.appendChild(div);
+});
+}
+
+/* ===== KERESÉS ===== */
 function keres() {
 const keresett = this.value.trim().toLowerCase();
 let html = '';
 
-// ❌ 1 karakter alatt nem keres
+frissitJavaslatok(keresett);
+
 if (keresett.length < 2) {
 document.getElementById('eredmeny').innerHTML = '';
 return;
@@ -121,7 +172,6 @@ const ultetesTalalat = ultetes.filter(r =>
 r[0] && r[0].toLowerCase().includes(keresett)
 );
 
-// 🟢 rendezés beültetés db szerint (csökkenő)
 ultetesTalalat.sort((a, b) => parseInt(b[5]) - parseInt(a[5]));
 
 if (ultetesTalalat.length > 0) {
@@ -143,6 +193,7 @@ if (bankTalalat.length === 0 && ultetesTalalat.length === 0) {
 html = `<div class="card">Nincs találat erre a cikkszámra</div>`;
 }
 
+document.getElementById('javaslatok').innerHTML = '';
 document.getElementById('eredmeny').innerHTML = html;
 }
 </script>
