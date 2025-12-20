@@ -38,9 +38,9 @@ border-radius: 4px;
 margin-bottom: 6px;
 }
 
-/* --- Javaslat lista (autocomplete) --- */
+/* --- Autocomplete (javaslatok) --- */
 #suggest {
-background: white;
+background: #fff;
 border-radius: 6px;
 box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 margin-top: 5px;
@@ -85,10 +85,12 @@ fetch('ultetes.csv?ver=FINAL1').then(r => r.text())
 bank = feldolgoz(bankText);
 ultetes = feldolgoz(ultetesText);
 
-document.getElementById('keres').disabled = false;
+const keresInput = document.getElementById('keres');
+keresInput.disabled = false;
 document.getElementById('eredmeny').innerHTML = '';
 
-document.getElementById('keres').addEventListener('input', function () {
+keresInput.addEventListener('input', function () {
+updateSuggest(this.value.toLowerCase());
 clearTimeout(keresIdozito);
 keresIdozito = setTimeout(keres.bind(this), 250);
 });
@@ -104,7 +106,7 @@ return text
 .map(s => s.split(';').map(e => e.trim()));
 }
 
-/* ===== Javasolt cikkszám végek ===== */
+/* ===== Javaslatok frissítése ===== */
 function updateSuggest(value) {
 const box = document.getElementById('suggest');
 box.innerHTML = '';
@@ -136,8 +138,6 @@ box.appendChild(d);
 function keres() {
 const keresett = this.value.trim().toLowerCase();
 let html = '';
-
-updateSuggest(keresett);
 
 if (keresett.length < 2) {
 document.getElementById('eredmeny').innerHTML = '';
