@@ -118,7 +118,7 @@ bank.forEach(r => r[2] && set.add(r[2]));
 ultetes.forEach(r => r[0] && set.add(r[0]));
 
 [...set]
-.filter(c => c.toLowerCase().startsWith(value))
+.filter(c => c.includes().startsWith(value))
 .slice(0, 8)
 .forEach(c => {
 const d = document.createElement('div');
