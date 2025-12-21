@@ -52,10 +52,11 @@ font-weight: 800;
 color: var(--accent);
 }
 
-.live-clock {
-font-family: monospace;
-font-size: 0.9rem;
+/* DÁTUM STÍLUS */
+.date-display {
+font-size: 0.85rem;
 color: #94a3b8;
+font-weight: 500;
 }
 
 .search-container {
@@ -116,12 +117,24 @@ border: 1px solid #334155;
 cursor: pointer;
 }
 
+/* TALÁLATI KÁRTYA SZÍNES JELZŐVEL */
 .card {
 background: var(--panel);
 margin-top: 15px;
 padding: 15px;
 border-radius: 12px;
 border: 1px solid #334155;
+position: relative;
+overflow: hidden;
+}
+
+/* Modell jelző csík a kártya szélén */
+.model-indicator {
+position: absolute;
+left: 0;
+top: 0;
+bottom: 0;
+width: 6px;
 }
 
 .bank-title strong, .ultetes-title strong {
@@ -137,6 +150,16 @@ font-size: 0.9rem;
 .ultetes-title strong { background: var(--ultetes-color); }
 
 .label { color: #94a3b8; font-size: 0.85rem; }
+.model-badge {
+display: inline-block;
+padding: 2px 8px;
+border-radius: 4px;
+font-size: 0.75rem;
+font-weight: bold;
+margin-top: 5px;
+color: white;
+}
+
 #eredmeny { max-width: 800px; margin: 0 auto 50px auto; padding: 0 15px; }
 </style>
 </head>
@@ -147,7 +170,7 @@ font-size: 0.9rem;
 
 <div class="top-bar">
 <h2>FORVIA TERMINAL</h2>
-<div class="live-clock" id="clock">00:00:00</div>
+<div class="date-display" id="dateText"></div>
 </div>
 
 <div class="search-container">
@@ -165,16 +188,30 @@ font-size: 0.9rem;
 <script>
 let bank = [];
 let ultetes = [];
-let idSet = new Set(); // Szupergyors ellenőrzéshez
-let uniqueIdsArr = []; // Javaslatokhoz
+let idSet = new Set();
+let uniqueIdsArr = [];
 let keresIdozito = null;
 let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || "[]");
 
-function updateClock() {
-document.getElementById('clock').textContent = new Date().toLocaleTimeString('hu-HU');
+// DÁTUM FORMÁZÁSA
+function updateDate() {
+const months = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
+const days = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
+const now = new Date();
+const formattedDate = `${now.getFullYear()}.${months[now.getMonth()]}.${now.getDate()} ${days[now.getDay()]}`;
+document.getElementById('dateText').textContent = formattedDate;
 }
-setInterval(updateClock, 1000);
-updateClock();
+updateDate();
+
+// MODELL SZÍN GENERÁTOR
+function getModelColor(modelName) {
+if (!modelName || modelName === "N/A") return "#4a5568";
+let hash = 0;
+for (let i = 0; i < modelName.length; i++) {
+hash = modelName.charCodeAt(i) + ((hash << 5) - hash);
+}
+return `hsl(${Math.abs(hash) % 360}, 65%, 50%)`;
+}
 
 Promise.all([
 fetch('bank.csv?ver=F3').then(r => r.text()),
@@ -194,14 +231,11 @@ renderHistory();
 
 input.addEventListener('input', function () {
 const val = this.value.toUpperCase();
-
 if (val.length < 2) {
 document.getElementById('suggest').style.display = 'none';
 document.getElementById('eredmeny').innerHTML = '';
-clearTimeout(keresIdozito);
 return;
 }
-
 updateSuggest(val);
 clearTimeout(keresIdozito);
 keresIdozito = setTimeout(() => keres(val), 100);
@@ -209,11 +243,7 @@ keresIdozito = setTimeout(() => keres(val), 100);
 });
 
 function feldolgoz(text) {
-return text.split('\n')
-.map(s => s.replace(/"/g, '').trim())
-.filter(s => s)
-.slice(1)
-.map(s => s.split(';').map(e => e.trim()));
+return text.split('\n').map(s => s.replace(/"/g, '').trim()).filter(s => s).slice(1).map(s => s.split(';').map(e => e.trim()));
 }
 
 function updateSuggest(value) {
@@ -225,7 +255,6 @@ matches.push(uniqueIdsArr[i]);
 if (matches.length >= 6) break;
 }
 }
-
 if (matches.length > 0) {
 box.innerHTML = matches.map(m => `<div class="s-item" onclick="selectSuggest('${m}')">${m}</div>`).join('');
 box.style.display = 'block';
@@ -258,38 +287,37 @@ if (keresett.length < 2) return;
 
 let html = '';
 
-// Bank találatok - LIMITÁLVA 30-ra
 const bankTalalat = bank.filter(r => r[2] && r[2].toUpperCase().includes(keresett)).slice(0, 30);
 if (bankTalalat.length) {
 html += `<div class="card bank-title"><strong>Feeder bank adatok</strong></div>`;
 bankTalalat.forEach(r => {
+const mColor = getModelColor(r[3]);
 html += `<div class="card">
+<div class="model-indicator" style="background:${mColor}"></div>
 <div><span class="label">Cikkszám:</span> <strong>${r[2]}</strong></div>
 <div><span class="label">Gép:</span> ${r[0]}</div>
 <div><span class="label">Pozíció:</span> ${r[1]}</div>
-<div><span class="label">Model:</span> ${r[3]}</div>
+<div><span class="label">Model:</span> <span class="model-badge" style="background:${mColor}">${r[3]}</span></div>
 </div>`;
 });
 }
 
-// Ültetés találatok - LIMITÁLVA 30-ra
-const ultetesTalalat = ultetes.filter(r => r[0] && r[0].toUpperCase().includes(keresett))
-.sort((a,b)=>parseInt(b[5])-parseInt(a[5]))
-.slice(0, 30);
+const ultetesTalalat = ultetes.filter(r => r[0] && r[0].toUpperCase().includes(keresett)).sort((a,b)=>parseInt(b[5])-parseInt(a[5])).slice(0, 30);
 if (ultetesTalalat.length) {
 html += `<div class="card ultetes-title"><strong>Beültetés adatok</strong></div>`;
 ultetesTalalat.forEach(r => {
+const mColor = getModelColor(r[4]);
 html += `<div class="card">
+<div class="model-indicator" style="background:${mColor}"></div>
 <div><span class="label">Cikkszám:</span> <strong>${r[0]}</strong></div>
 <div><span class="label">Alkatrész info:</span> ${r[1]}</div>
 <div><span class="label">Oldal:</span> ${r[3]}</div>
-<div><span class="label">Modell:</span> ${r[4]}</div>
+<div><span class="label">Modell:</span> <span class="model-badge" style="background:${mColor}">${r[4]}</span></div>
 <div><span class="label">Beültetés db:</span> ${r[5]}</div>
 </div>`;
 });
 }
 
-// ELŐZMÉNY MENTÉSE - Csak ha pontos és létező a cikkszám
 if (idSet.has(keresett)) {
 searchHistory = [keresett, ...searchHistory.filter(c => c !== keresett)].slice(0, 5);
 localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
