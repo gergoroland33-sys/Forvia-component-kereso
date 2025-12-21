@@ -52,7 +52,6 @@ font-weight: 800;
 color: var(--accent);
 }
 
-/* DÁTUM STÍLUS */
 .date-display {
 font-size: 0.85rem;
 color: #94a3b8;
@@ -117,7 +116,6 @@ border: 1px solid #334155;
 cursor: pointer;
 }
 
-/* TALÁLATI KÁRTYA SZÍNES JELZŐVEL */
 .card {
 background: var(--panel);
 margin-top: 15px;
@@ -128,7 +126,7 @@ position: relative;
 overflow: hidden;
 }
 
-/* Modell jelző csík a kártya szélén */
+/* Modell jelző sáv (csak a Bank adatokhoz) */
 .model-indicator {
 position: absolute;
 left: 0;
@@ -150,15 +148,6 @@ font-size: 0.9rem;
 .ultetes-title strong { background: var(--ultetes-color); }
 
 .label { color: #94a3b8; font-size: 0.85rem; }
-.model-badge {
-display: inline-block;
-padding: 2px 8px;
-border-radius: 4px;
-font-size: 0.75rem;
-font-weight: bold;
-margin-top: 5px;
-color: white;
-}
 
 #eredmeny { max-width: 800px; margin: 0 auto 50px auto; padding: 0 15px; }
 </style>
@@ -193,7 +182,6 @@ let uniqueIdsArr = [];
 let keresIdozito = null;
 let searchHistory = JSON.parse(localStorage.getItem('searchHistory') || "[]");
 
-// DÁTUM FORMÁZÁSA
 function updateDate() {
 const months = ["Január", "Február", "Március", "Április", "Május", "Június", "Július", "Augusztus", "Szeptember", "Október", "November", "December"];
 const days = ["Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat"];
@@ -203,7 +191,7 @@ document.getElementById('dateText').textContent = formattedDate;
 }
 updateDate();
 
-// MODELL SZÍN GENERÁTOR
+// Modell szín generálása
 function getModelColor(modelName) {
 if (!modelName || modelName === "N/A") return "#4a5568";
 let hash = 0;
@@ -214,8 +202,8 @@ return `hsl(${Math.abs(hash) % 360}, 65%, 50%)`;
 }
 
 Promise.all([
-fetch('bank.csv?ver=F3').then(r => r.text()),
-fetch('ultetes.csv?ver=F3').then(r => r.text())
+fetch('bank.csv?ver=F4').then(r => r.text()),
+fetch('ultetes.csv?ver=F4').then(r => r.text())
 ]).then(([bankText, ultetesText]) => {
 bank = feldolgoz(bankText);
 ultetes = feldolgoz(ultetesText);
@@ -297,7 +285,7 @@ html += `<div class="card">
 <div><span class="label">Cikkszám:</span> <strong>${r[2]}</strong></div>
 <div><span class="label">Gép:</span> ${r[0]}</div>
 <div><span class="label">Pozíció:</span> ${r[1]}</div>
-<div><span class="label">Model:</span> <span class="model-badge" style="background:${mColor}">${r[3]}</span></div>
+<div><span class="label">Model:</span> ${r[3]}</div>
 </div>`;
 });
 }
@@ -306,13 +294,11 @@ const ultetesTalalat = ultetes.filter(r => r[0] && r[0].toUpperCase().includes(k
 if (ultetesTalalat.length) {
 html += `<div class="card ultetes-title"><strong>Beültetés adatok</strong></div>`;
 ultetesTalalat.forEach(r => {
-const mColor = getModelColor(r[4]);
 html += `<div class="card">
-<div class="model-indicator" style="background:${mColor}"></div>
 <div><span class="label">Cikkszám:</span> <strong>${r[0]}</strong></div>
 <div><span class="label">Alkatrész info:</span> ${r[1]}</div>
 <div><span class="label">Oldal:</span> ${r[3]}</div>
-<div><span class="label">Modell:</span> <span class="model-badge" style="background:${mColor}">${r[4]}</span></div>
+<div><span class="label">Modell:</span> ${r[4]}</div>
 <div><span class="label">Beültetés db:</span> ${r[5]}</div>
 </div>`;
 });
